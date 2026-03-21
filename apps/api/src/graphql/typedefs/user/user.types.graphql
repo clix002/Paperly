@@ -1,0 +1,10 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  role: String!
+  image: String
+  isActive: Boolean!
+  signatureUrl: String
+  createdAt: DateTime!
+}

@@ -1,0 +1,4 @@
+extend type Query {
+  getCommentsByDocument(documentId: ID!): [Comment!]!
+  getDocumentsWithComments: [Document!]!
+}

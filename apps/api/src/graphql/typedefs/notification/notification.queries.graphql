@@ -1,0 +1,4 @@
+extend type Query {
+  getMyNotifications: [Notification!]!
+  getUnreadCount: Int!
+}

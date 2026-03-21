@@ -1,0 +1,37 @@
+type Document {
+  id: ID!
+  title: String!
+  contentJson: JSON
+  status: DocumentStatus!
+  requiresSignature: Boolean!
+  senderId: ID
+  receiverId: ID
+  templateId: ID
+  categoryId: ID
+  originalDocumentId: ID
+  isDeleted: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  # Relations
+  sender: User
+  receiver: User
+  template: Template
+  originalDocument: Document
+}
+
+type DocumentPagination {
+  docs: [Document!]!
+  info: Pagination!
+}
+
+enum DocumentStatus {
+  draft
+  sent
+  viewed
+  in_review
+  signed
+  rejected
+  completed
+  archived
+}

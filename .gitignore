@@ -1,0 +1,42 @@
+# Dependencies
+node_modules
+bun.lockb
+
+# Build outputs
+.next
+dist
+out
+build
+
+# Env files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Turbo
+.turbo
+
+# Drizzle migrations (generated)
+**/drizzle/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+
+# Generated GraphQL types
+**/generated/
+
+# Claude Code — no commitear
+.claude/
+CLAUDE.md
+skills-lock.json
+.agents/
+.mcp.json

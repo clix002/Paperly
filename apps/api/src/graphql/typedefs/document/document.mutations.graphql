@@ -1,0 +1,7 @@
+extend type Mutation {
+  createDocument(input: CreateDocumentInput!): Document!
+  updateDocument(id: ID!, input: UpdateDocumentInput!): Document!
+  deleteDocument(id: ID!): Document!
+  sendDocument(id: ID!, receiverId: ID!): Document!
+  signDocument(id: ID!, contentJson: JSON): Document!
+}

@@ -1,0 +1,98 @@
+query GetDocumentsByReceiver {
+  getDocumentsByReceiver {
+    id
+    title
+    status
+    requiresSignature
+    createdAt
+    updatedAt
+    sender {
+      id
+      name
+      email
+      image
+    }
+  }
+}
+
+query GetDocumentById($id: ID!) {
+  getDocumentById(id: $id) {
+    id
+    title
+    contentJson
+    status
+    requiresSignature
+    senderId
+    receiverId
+    templateId
+    originalDocumentId
+    createdAt
+    updatedAt
+    sender {
+      id
+      name
+      email
+      image
+    }
+    receiver {
+      id
+      name
+      email
+    }
+  }
+}
+
+mutation SignDocument($id: ID!, $contentJson: JSON) {
+  signDocument(id: $id, contentJson: $contentJson) {
+    id
+    status
+  }
+}
+
+mutation CreateDocument($input: CreateDocumentInput!) {
+  createDocument(input: $input) {
+    id
+    title
+    contentJson
+    status
+  }
+}
+
+mutation UpdateDocument($id: ID!, $input: UpdateDocumentInput!) {
+  updateDocument(id: $id, input: $input) {
+    id
+    title
+    contentJson
+    status
+    requiresSignature
+  }
+}
+
+mutation DeleteDocument($id: ID!) {
+  deleteDocument(id: $id) {
+    id
+  }
+}
+
+mutation SendDocument($id: ID!, $receiverId: ID!) {
+  sendDocument(id: $id, receiverId: $receiverId) {
+    id
+    title
+    status
+    receiver {
+      id
+      name
+    }
+  }
+}
+
+query GetUsers {
+  users {
+    id
+    name
+    email
+    role
+    image
+    isActive
+  }
+}

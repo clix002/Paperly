@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: paperly
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: paperly
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperly -d paperly"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://paperly:${POSTGRES_PASSWORD}@postgres:5432/paperly
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      API_URL: ${API_URL}
+      WEB_URL: ${WEB_URL}
+      PORT: 4000
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_ENDPOINT: ${R2_ENDPOINT}
+      R2_BUCKET: ${R2_BUCKET}
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${API_URL}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      INTERNAL_API_URL: http://api:4000
+    ports:
+      - "3001:3001"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,49 @@
+query GetTemplates {
+  getTemplates {
+    id
+    title
+    description
+    contentJson
+    status
+    isPublic
+    categoryId
+    createdAt
+    updatedAt
+  }
+}
+
+query GetTemplateById($id: ID!) {
+  getTemplateById(id: $id) {
+    id
+    title
+    description
+    contentJson
+    status
+    isPublic
+    categoryId
+    createdAt
+    updatedAt
+  }
+}
+
+mutation CreateTemplate($input: CreateTemplateInput!) {
+  createTemplate(input: $input) {
+    id
+    title
+    status
+  }
+}
+
+mutation UpdateTemplate($id: ID!, $input: UpdateTemplateInput!) {
+  updateTemplate(id: $id, input: $input) {
+    id
+    title
+    status
+  }
+}
+
+mutation DeleteTemplate($id: ID!) {
+  deleteTemplate(id: $id) {
+    id
+  }
+}

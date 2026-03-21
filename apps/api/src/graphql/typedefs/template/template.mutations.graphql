@@ -1,0 +1,5 @@
+extend type Mutation {
+  createTemplate(input: CreateTemplateInput!): Template!
+  updateTemplate(id: ID!, input: UpdateTemplateInput!): Template!
+  deleteTemplate(id: ID!): Template!
+}
