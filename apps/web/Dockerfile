@@ -13,8 +13,8 @@ COPY packages/shared/ ./packages/shared/
 COPY apps/web/ ./apps/web/
 
 # Generar tipos GraphQL ANTES del build
-COPY codegen.backend.ts codegen.frontend.ts ./
-RUN bun run codegen
+COPY codegen.frontend.ts ./
+RUN bun run codegen:f
 
 WORKDIR /app/apps/web
 
