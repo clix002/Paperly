@@ -7,7 +7,7 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/db/package.json ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
 
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copiar código fuente
 COPY packages/ ./packages/
