@@ -1,0 +1,11 @@
+type Comment {
+  id: ID!
+  content: String!
+  documentId: ID!
+  authorId: ID!
+  parentId: ID
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  author: User
+  document: Document
+}

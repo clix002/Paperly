@@ -1,0 +1,17 @@
+input CreateTemplateInput {
+  title: String!
+  description: String
+  contentJson: JSON
+  status: TemplateStatus
+  isPublic: Boolean
+  categoryId: ID
+}
+
+input UpdateTemplateInput {
+  title: String
+  description: String
+  contentJson: JSON
+  status: TemplateStatus
+  isPublic: Boolean
+  categoryId: ID
+}

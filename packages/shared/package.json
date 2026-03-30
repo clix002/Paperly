@@ -1,0 +1,19 @@
+{
+  "name": "@paperly/shared",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "bunx --bun @biomejs/biome check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "zod": "^3.25.0",
+    "typescript": "^5"
+  }
+}

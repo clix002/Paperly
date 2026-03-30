@@ -1,0 +1,26 @@
+query GetMyNotifications {
+  getMyNotifications {
+    id
+    type
+    title
+    message
+    isRead
+    documentId
+    createdAt
+  }
+}
+
+query GetUnreadCount {
+  getUnreadCount
+}
+
+mutation MarkNotificationRead($id: ID!) {
+  markNotificationRead(id: $id) {
+    id
+    isRead
+  }
+}
+
+mutation MarkAllNotificationsRead {
+  markAllNotificationsRead
+}

@@ -1,0 +1,20 @@
+type Template {
+  id: ID!
+  title: String!
+  description: String
+  contentJson: JSON
+  status: TemplateStatus!
+  isPublic: Boolean!
+  createdById: ID
+  categoryId: ID
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  # Relations
+  createdBy: User
+}
+
+enum TemplateStatus {
+  draft
+  published
+}

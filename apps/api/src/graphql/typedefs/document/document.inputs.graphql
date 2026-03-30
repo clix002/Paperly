@@ -1,0 +1,17 @@
+input CreateDocumentInput {
+  title: String!
+  contentJson: JSON
+  requiresSignature: Boolean
+  templateId: ID
+  categoryId: ID
+  status: DocumentStatus
+}
+
+input UpdateDocumentInput {
+  title: String
+  contentJson: JSON
+  requiresSignature: Boolean
+  status: DocumentStatus
+  templateId: ID
+  categoryId: ID
+}
