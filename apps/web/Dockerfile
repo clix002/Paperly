@@ -11,6 +11,7 @@ RUN bun install
 # Copiar código fuente
 COPY packages/shared/ ./packages/shared/
 COPY apps/web/ ./apps/web/
+COPY apps/api/src/graphql/ ./apps/api/src/graphql/
 
 # Generar tipos GraphQL ANTES del build
 COPY codegen.frontend.ts ./
