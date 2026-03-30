@@ -12,6 +12,10 @@ RUN bun install
 COPY packages/shared/ ./packages/shared/
 COPY apps/web/ ./apps/web/
 
+# Generar tipos GraphQL ANTES del build
+COPY codegen.frontend.ts ./
+RUN bun run codegen
+
 WORKDIR /app/apps/web
 
 # NEXT_PUBLIC_* se hornea en build time — debe venir como build arg
