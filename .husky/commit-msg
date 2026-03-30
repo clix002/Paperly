@@ -1,0 +1,35 @@
+#!/bin/sh
+# Validar formato de mensaje de commit
+# Formato: <tipo>(<scope opcional>): <descripción>
+
+commit_message=$(cat "$1")
+
+if ! echo "$commit_message" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|build|ci|revert)(\(.+\))?: .{1,}$"; then
+    echo ""
+    echo "❌ Formato de commit inválido!"
+    echo ""
+    echo "✅ Formato correcto: <tipo>(<scope>): <descripción>"
+    echo ""
+    echo "📋 Tipos válidos:"
+    echo "   feat     → nueva funcionalidad"
+    echo "   fix      → corrección de bug"
+    echo "   docs     → cambios en documentación"
+    echo "   style    → formato, espacios (sin cambios de lógica)"
+    echo "   refactor → refactorización de código"
+    echo "   test     → agregar o modificar tests"
+    echo "   chore    → tareas de mantenimiento"
+    echo "   perf     → mejoras de rendimiento"
+    echo "   build    → cambios en build o dependencias"
+    echo "   ci       → cambios en CI/CD"
+    echo "   revert   → revertir un commit"
+    echo ""
+    echo "💡 Ejemplos:"
+    echo "   feat(auth): add login with better-auth"
+    echo "   fix(api): cors credentials not being sent"
+    echo "   docs: update README with deployment guide"
+    echo "   chore: add husky git hooks"
+    echo ""
+    exit 1
+fi
+
+echo "✅ Commit válido"

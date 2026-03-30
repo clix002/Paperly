@@ -1,0 +1,5 @@
+extend type Query {
+  getDocumentById(id: ID!): Document
+  getDocuments(query: QueryInput, options: OptionsInput): DocumentPagination!
+  getDocumentsByReceiver: [Document!]!
+}

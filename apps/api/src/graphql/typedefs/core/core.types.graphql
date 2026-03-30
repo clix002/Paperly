@@ -1,0 +1,29 @@
+scalar DateTime
+scalar JSON
+
+input QueryInput {
+  search: String
+  filters: JSON
+}
+
+input OptionsInput {
+  limit: Int
+  page: Int
+}
+
+type Pagination {
+  totalDocs: Int!
+  limit: Int!
+  page: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+}
+
+type Query {
+  _empty: String
+}
+
+type Mutation {
+  _empty: String
+}

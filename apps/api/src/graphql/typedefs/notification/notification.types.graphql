@@ -1,0 +1,22 @@
+type Notification {
+  id: ID!
+  type: NotificationType!
+  title: String!
+  message: String
+  isRead: Boolean!
+  userId: ID!
+  documentId: ID
+  createdAt: DateTime!
+
+  document: Document
+}
+
+enum NotificationType {
+  document_sent
+  document_viewed
+  document_signed
+  document_rejected
+  document_completed
+  comment_received
+  document_in_review
+}

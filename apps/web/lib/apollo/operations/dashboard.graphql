@@ -1,0 +1,36 @@
+query GetWorkerDashboardStats {
+  getDocumentsByReceiver {
+    id
+    status
+  }
+}
+
+query GetDocuments($query: QueryInput, $options: OptionsInput) {
+  getDocuments(query: $query, options: $options) {
+    docs {
+      id
+      title
+      status
+      requiresSignature
+      originalDocumentId
+      createdAt
+      updatedAt
+      sender {
+        id
+        name
+      }
+      receiver {
+        id
+        name
+      }
+    }
+    info {
+      totalDocs
+      limit
+      page
+      totalPages
+      hasNextPage
+      hasPrevPage
+    }
+  }
+}

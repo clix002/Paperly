@@ -1,0 +1,4 @@
+extend type Query {
+  getTemplateById(id: ID!): Template
+  getTemplates(query: QueryInput): [Template!]!
+}

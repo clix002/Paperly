@@ -1,0 +1,19 @@
+query Me {
+  me {
+    id
+    name
+    email
+    role
+    image
+    isActive
+    signatureUrl
+    createdAt
+  }
+}
+
+mutation SaveUserSignature($dataUrl: String!) {
+  saveUserSignature(dataUrl: $dataUrl) {
+    id
+    signatureUrl
+  }
+}

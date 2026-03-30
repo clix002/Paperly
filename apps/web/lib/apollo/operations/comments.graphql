@@ -1,0 +1,47 @@
+query GetCommentsByDocument($documentId: ID!) {
+  getCommentsByDocument(documentId: $documentId) {
+    id
+    content
+    documentId
+    authorId
+    createdAt
+    author {
+      id
+      name
+      email
+      role
+      image
+    }
+  }
+}
+
+query GetDocumentsWithComments {
+  getDocumentsWithComments {
+    id
+    title
+    status
+    requiresSignature
+    createdAt
+    updatedAt
+    receiver {
+      id
+      name
+      email
+    }
+  }
+}
+
+mutation CreateComment($documentId: ID!, $content: String!) {
+  createComment(documentId: $documentId, content: $content) {
+    id
+    content
+    documentId
+    authorId
+    createdAt
+    author {
+      id
+      name
+      role
+    }
+  }
+}

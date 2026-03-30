@@ -1,0 +1,31 @@
+{
+  "name": "paperly",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "format": "bunx --bun @biomejs/biome check --write .",
+    "codegen": "bun run codegen:b && bun run codegen:f",
+    "codegen:b": "graphql-codegen --config codegen.backend.ts",
+    "codegen:f": "graphql-codegen --config codegen.frontend.ts",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.0",
+    "@graphql-codegen/cli": "^6.2.1",
+    "@graphql-codegen/client-preset": "^5.2.4",
+    "@graphql-codegen/typescript": "^5.0.9",
+    "@graphql-codegen/typescript-resolvers": "^5.1.7",
+    "husky": "^9.1.7",
+    "turbo": "latest",
+    "typescript": "^5"
+  },
+  "packageManager": "bun@1.2.0"
+}
