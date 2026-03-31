@@ -10,3 +10,8 @@ type Comment {
   author: User
   document: Document
 }
+
+type CommentPagination {
+  docs: [Comment!]!
+  info: Pagination!
+}
