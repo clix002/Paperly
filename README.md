@@ -18,7 +18,7 @@ Los equipos de RR.HH. gestionan contratos, acuerdos y comunicados de forma manua
 | Distribución por correo sin control | Envío digital con tracking de estado por documento |
 | Firma en papel o PDF enviado por mail | Firma digital integrada con verificación por contraseña |
 | Sin visibilidad del estado | Dashboard con estadísticas y vista kanban de seguimiento |
-| Errores sin canal formal | Sistema de comentarios worker ↔ RR.HH. con flujo de revisión |
+| Errores sin canal formal | Sistema de comentarios worker ↔ RR.HH. con IA que responde primero en tiempo real |
 | Imágenes y firmas se pierden | Almacenamiento persistente en Cloudflare R2 |
 
 ---
@@ -75,6 +75,8 @@ sequenceDiagram
 | Canvas editor | Fabric.js v7 |
 | Almacenamiento | Cloudflare R2 (S3-compatible) |
 | UI | shadcn/ui + Tailwind CSS 4 |
+| Tiempo real | GraphQL Subscriptions + graphql-ws |
+| IA | Groq (llama-3.3-70b) — respuestas automáticas a observaciones |
 | Linter | Biome 2 |
 
 ---

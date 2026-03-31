@@ -87,10 +87,28 @@ Schema dividido por dominio en `apps/api/src/graphql/typedefs/`:
 typedefs/
 ├── user/       ← me, users, saveUserSignature
 ├── document/   ← getDocuments, getDocumentById, CRUD, send, sign
-└── comment/    ← getComments, createComment
+└── comment/    ← getComments, createComment, commentAdded (subscription)
 ```
 
 El frontend usa codegen (`@graphql-codegen`) para generar tipos TypeScript y `DocumentNode` tipados desde el schema. Nunca se escriben queries como strings en el cliente.
+
+### Suscripciones en tiempo real
+
+Los comentarios usan GraphQL Subscriptions via WebSocket (`graphql-transport-ws`). El servidor Bun maneja el upgrade directamente antes de pasar al handler de Hono:
+
+```
+Browser → ws://api:3000/graphql → Bun WS → graphql-ws makeServer → PubSub
+```
+
+El hook `useComments` (web) centraliza query + subscription + mutation. Cuando llega un `commentAdded`, escribe directo al cache de Apollo sin refetch.
+
+### IA automática (Groq)
+
+Cuando un worker envía una observación, el servidor dispara `sendAiResponse` sin await (fire & forget). Groq (llama-3.3-70b) genera la respuesta y se publica via pubsub — llega al browser en tiempo real por la misma suscripción.
+
+```
+createComment → pubsub.publish(userComment) → [async] Groq API → pubsub.publish(aiComment)
+```
 
 ---
 
