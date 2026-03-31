@@ -15,9 +15,24 @@ Reglas:
 - Responde siempre en el mismo idioma del trabajador (español por defecto)
 - No inventes políticas ni datos que no estén en el contexto`
 
+function extractTextFromCanvas(contentJson: string | null): string {
+  if (!contentJson) return ""
+  try {
+    const canvas = typeof contentJson === "string" ? JSON.parse(contentJson) : contentJson
+    const objects = canvas.objects ?? []
+    return objects
+      .filter((o: { type: string; text?: string }) => o.text)
+      .map((o: { text: string }) => o.text)
+      .join(" ")
+      .slice(0, 800)
+  } catch {
+    return ""
+  }
+}
+
 export async function generateAiResponse(params: {
   documentTitle: string
-  documentContent: string
+  documentContent: string | null
   workerName: string
   observation: string
 }): Promise<string | null> {
@@ -26,10 +41,12 @@ export async function generateAiResponse(params: {
     return null
   }
 
+  const textContent = extractTextFromCanvas(params.documentContent)
+
   const prompt = `Documento: "${params.documentTitle}"
 
-Contenido del documento (resumen):
-${params.documentContent.slice(0, 800)}
+Contenido del documento:
+${textContent || "(sin texto visible)"}
 
 Trabajador: ${params.workerName}
 Observación del trabajador: ${params.observation}
