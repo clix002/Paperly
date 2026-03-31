@@ -110,7 +110,7 @@ class CommentUseCase {
   }) {
     const aiText = await generateAiResponse({
       documentTitle: params.doc.title,
-      documentContent: params.doc.contentJson ?? "",
+      documentContent: params.doc.contentJson,
       workerName: params.workerName,
       observation: params.observation,
     })
