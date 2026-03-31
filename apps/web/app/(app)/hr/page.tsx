@@ -1,21 +1,19 @@
 "use client"
 
 import { useQuery } from "@apollo/client/react"
-import {
-  ArrowRight,
-  BarChart3,
-  Eye,
-  FileText,
-  GitPullRequestArrow,
-  MessageSquare,
-  Plus,
-  Send,
-} from "lucide-react"
+import { ArrowRight, FileText, GitPullRequestArrow, Plus } from "lucide-react"
 import Link from "next/link"
 import { useMemo } from "react"
+import { Label, Pie, PieChart } from "recharts"
 import { AttentionList, filterAttentionDocs } from "@/components/hr/attention-list"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import { Spinner } from "@/components/ui/spinner"
 import { DocumentStatus, GetDocumentsDocument } from "@/lib/apollo/generated/graphql"
 import { useSession } from "@/lib/auth-client"
@@ -31,11 +29,9 @@ type RawDoc = {
 }
 
 function computeStats(docs: RawDoc[]) {
-  const originals = docs.filter((d) => !d.originalDocumentId)
   const clones = docs.filter((d) => d.originalDocumentId)
 
   return {
-    created: originals.length,
     sent: clones.length,
     pending: clones.filter((d) =>
       [DocumentStatus.Sent, DocumentStatus.Viewed].includes(d.status as DocumentStatus)
@@ -95,81 +91,114 @@ export default function HRDashboardPage() {
   )
 }
 
+const chartConfig = {
+  pending: { label: "Pendientes", color: "var(--color-amber-400)" },
+  signed: { label: "Firmados", color: "var(--color-green-500)" },
+  inReview: { label: "En revisión", color: "var(--color-orange-500)" },
+} satisfies ChartConfig
+
 interface StatsSectionProps {
   stats: Stats
 }
 
 function StatsSection({ stats }: StatsSectionProps) {
+  const chartData = [
+    { name: "pending", value: stats.pending, fill: "var(--color-amber-400)" },
+    { name: "signed", value: stats.signed, fill: "var(--color-green-500)" },
+    { name: "inReview", value: stats.inReview, fill: "var(--color-orange-500)" },
+  ]
+
+  const hasData = stats.sent > 0
+
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="Documentos creados"
-          value={stats.created}
-          icon={FileText}
-          color="text-blue-600 bg-blue-100"
-        />
-        <StatCard
-          label="Total enviados"
-          value={stats.sent}
-          icon={Send}
-          color="text-violet-600 bg-violet-100"
-        />
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard
-          label="Pendientes"
-          value={stats.pending}
-          icon={Eye}
-          color="text-amber-600 bg-amber-100"
-          compact
-        />
-        <StatCard
-          label="Firmados"
-          value={stats.signed}
-          icon={BarChart3}
-          color="text-green-600 bg-green-100"
-          compact
-        />
-        <StatCard
-          label="En revisión"
-          value={stats.inReview}
-          icon={MessageSquare}
-          color="text-amber-600 bg-amber-100"
-          compact
-          highlight={stats.inReview > 0}
-        />
-      </div>
-    </div>
+    <Card>
+      <CardContent className="flex items-center gap-6 p-4">
+        {/* Donut chart */}
+        <ChartContainer config={chartConfig} className="size-35 shrink-0">
+          <PieChart>
+            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+            <Pie
+              data={hasData ? chartData : [{ name: "empty", value: 1, fill: "var(--muted)" }]}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={42}
+              outerRadius={62}
+              strokeWidth={0}
+            >
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-2xl font-bold"
+                        >
+                          {stats.sent}
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy ?? 0) + 18}
+                          className="fill-muted-foreground text-[10px]"
+                        >
+                          enviados
+                        </tspan>
+                      </text>
+                    )
+                  }
+                }}
+              />
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+
+        {/* Legend / stats */}
+        <div className="flex-1 space-y-3">
+          <StatRow
+            color="bg-amber-400"
+            label="Pendientes"
+            value={stats.pending}
+            total={stats.sent}
+          />
+          <StatRow color="bg-green-500" label="Firmados" value={stats.signed} total={stats.sent} />
+          <StatRow
+            color="bg-orange-500"
+            label="En revisión"
+            value={stats.inReview}
+            total={stats.sent}
+            highlight={stats.inReview > 0}
+          />
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
-interface StatCardProps {
+interface StatRowProps {
+  color: string
   label: string
   value: number
-  icon: typeof FileText
-  color: string
-  compact?: boolean
+  total: number
   highlight?: boolean
 }
 
-function StatCard({ label, value, icon: Icon, color, compact, highlight }: StatCardProps) {
+function StatRow({ color, label, value, total, highlight }: StatRowProps) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0
   return (
-    <Card
-      className={cn(compact ? "p-3" : "p-4", highlight && "ring-1 ring-amber-200 bg-amber-50/30")}
-    >
-      <div className="flex items-center gap-3">
-        <div className={cn("rounded-lg shrink-0", compact ? "p-1.5" : "p-2", color)}>
-          <Icon className={compact ? "size-4" : "size-5"} />
-        </div>
-        <div>
-          <p className={cn("font-bold tabular-nums", compact ? "text-xl" : "text-2xl")}>{value}</p>
-          <p className={cn("text-muted-foreground", compact ? "text-[11px]" : "text-xs")}>
-            {label}
-          </p>
-        </div>
-      </div>
-    </Card>
+    <div className="flex items-center gap-2.5">
+      <span className={cn("size-2.5 rounded-full shrink-0", color)} />
+      <span className={cn("text-sm flex-1", highlight && "font-medium text-orange-600")}>
+        {label}
+      </span>
+      <span className="text-sm font-semibold tabular-nums">{value}</span>
+      <span className="text-xs text-muted-foreground w-8 text-right">{pct}%</span>
+    </div>
   )
 }
 

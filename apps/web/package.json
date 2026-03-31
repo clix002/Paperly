@@ -46,6 +46,7 @@
     "react-color": "^2.19.3",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",
+    "recharts": "3.8.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.0",
     "tw-animate-css": "^1.3.4",
