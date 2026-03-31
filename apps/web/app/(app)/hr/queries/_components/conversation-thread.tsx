@@ -24,7 +24,15 @@ interface ConversationThreadProps {
 export function ConversationThread({ doc, onStatusChange }: ConversationThreadProps) {
   const [message, setMessage] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { comments, loading: messagesLoading, sending, send } = useComments(doc.id)
+  const {
+    comments,
+    loading: messagesLoading,
+    sending,
+    send,
+    loadMore,
+    loadingMore,
+    hasMore,
+  } = useComments(doc.id)
 
   const [updateDocument, { loading: updating }] = useMutation(UpdateDocumentDocument, {
     onCompleted: () => {
@@ -85,7 +93,13 @@ export function ConversationThread({ doc, onStatusChange }: ConversationThreadPr
       </div>
 
       {/* Mensajes */}
-      <MessageList comments={comments as CommentType[]} loading={messagesLoading} />
+      <MessageList
+        comments={comments as CommentType[]}
+        loading={messagesLoading}
+        loadMore={loadMore}
+        loadingMore={loadingMore}
+        hasMore={hasMore}
+      />
 
       {/* Input */}
       <div className="px-6 py-4 border-t bg-background shrink-0">
@@ -118,22 +132,46 @@ export function ConversationThread({ doc, onStatusChange }: ConversationThreadPr
 interface MessageListProps {
   comments: CommentType[]
   loading: boolean
+  loadMore: () => void
+  loadingMore: boolean
+  hasMore: boolean
 }
 
-function MessageList({ comments, loading }: MessageListProps) {
+function MessageList({ comments, loading, loadMore, loadingMore, hasMore }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const lastIdRef = useRef<string | null>(null)
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll al llegar nuevos mensajes
+  const lastId = comments[comments.length - 1]?.id ?? null
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "instant" })
-  }, [comments.length])
+    if (lastId && lastId !== lastIdRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+      lastIdRef.current = lastId
+    }
+  }, [lastId])
+
+  const handleScroll = () => {
+    if (containerRef.current && containerRef.current.scrollTop === 0 && hasMore) {
+      loadMore()
+    }
+  }
 
   if (loading) return <MessageSkeleton />
 
   if (comments.length === 0) return <MessagesEmpty />
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 [&::-webkit-scrollbar]:hidden">
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="flex-1 overflow-y-auto px-6 py-5 space-y-5 [&::-webkit-scrollbar]:hidden"
+    >
+      {loadingMore && (
+        <div className="flex justify-center py-2">
+          <Spinner className="size-4" />
+        </div>
+      )}
       {comments.map((c) => (
         <MessageBubble key={c.id} comment={c} />
       ))}
