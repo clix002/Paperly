@@ -158,7 +158,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
-            <div className="px-2 pb-1">
+            <div className="p-1 flex justify-self-auto">
               <NotificationBell />
             </div>
           </SidebarHeader>

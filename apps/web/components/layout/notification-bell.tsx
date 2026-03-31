@@ -67,7 +67,7 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger
-        className="relative inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted transition-colors"
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-muted transition-colors"
         aria-label="Notificaciones"
       >
         <Bell className="h-4 w-4" />
