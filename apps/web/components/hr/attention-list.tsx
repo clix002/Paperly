@@ -43,7 +43,7 @@ export function AttentionList({ documents }: { documents: AttentionDoc[] }) {
         </Link>
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-3">
         {documents.map((doc) => (
           <AttentionItem key={doc.id} doc={doc} />
         ))}
