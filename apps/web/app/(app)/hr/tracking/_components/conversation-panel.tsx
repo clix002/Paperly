@@ -1,19 +1,14 @@
 "use client"
 
-import { useMutation, useQuery } from "@apollo/client/react"
 import { Clock, MessageSquare, Send } from "lucide-react"
 import { useState } from "react"
-import { toast } from "sonner"
 import { WorkerAvatar } from "@/app/(app)/hr/queries/_components/worker-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import {
-  CreateCommentDocument,
-  GetCommentsByDocumentDocument,
-} from "@/lib/apollo/generated/graphql"
+import { useComments } from "@/hooks/use-comments"
 import { cn, formatRelativeDate } from "@/lib/utils"
 import type { Comment } from "../_lib/tracking"
 
@@ -23,25 +18,11 @@ interface ConversationPanelProps {
 
 export function ConversationPanel({ documentId }: ConversationPanelProps) {
   const [message, setMessage] = useState("")
-
-  const { data, loading, refetch } = useQuery(GetCommentsByDocumentDocument, {
-    variables: { documentId },
-  })
-
-  const [createComment, { loading: sending }] = useMutation(CreateCommentDocument, {
-    onCompleted: () => {
-      setMessage("")
-      refetch()
-    },
-    onError: (err) => toast.error(err.message),
-  })
-
-  const comments = (data?.getCommentsByDocument ?? []) as Comment[]
+  const { comments, loading, sending, send } = useComments(documentId)
 
   const handleSend = () => {
-    const trimmed = message.trim()
-    if (!trimmed) return
-    createComment({ variables: { documentId, content: trimmed } })
+    send(message)
+    setMessage("")
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -54,7 +35,7 @@ export function ConversationPanel({ documentId }: ConversationPanelProps) {
   return (
     <>
       <ConversationHeader count={comments.length} />
-      <ConversationMessages comments={comments} loading={loading} />
+      <ConversationMessages comments={comments as Comment[]} loading={loading} />
       <ConversationInput
         message={message}
         onMessageChange={setMessage}

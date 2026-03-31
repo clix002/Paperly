@@ -1,6 +1,10 @@
+import { makeServer } from "graphql-ws"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
+import { auth } from "./auth/auth"
 import { authRoutes } from "./auth/auth.routes"
+import { createContext } from "./graphql/context"
+import { schema } from "./graphql/schema"
 import { yoga } from "./graphql/yoga"
 import { env } from "./lib/env"
 import { getFromR2, uploadToR2 } from "./lib/r2"
@@ -57,9 +61,64 @@ app.get("/uploads/:key", async (c) => {
 // GraphQL (Yoga handles GET + POST)
 app.on(["GET", "POST"], "/graphql", (c) => yoga.fetch(c.req.raw, { env }))
 
-Bun.serve({
+// WebSocket server for GraphQL subscriptions
+const wsServer = makeServer({
+  schema,
+  context: async (ctx) => {
+    const extra = ctx.extra as { request: Request }
+    return createContext(extra.request, auth)
+  },
+})
+
+type WsData = { id: string; request: Request }
+type DispatchFn = (code?: number, reason?: string) => void
+
+const onMessageHandlers = new Map<string, (msg: string) => void>()
+const disposeHandlers = new Map<string, DispatchFn>()
+
+Bun.serve<WsData>({
   port: env.PORT,
-  fetch: app.fetch,
+  fetch(req, server) {
+    const url = new URL(req.url)
+    if (url.pathname === "/graphql" && req.headers.get("upgrade") === "websocket") {
+      const id = crypto.randomUUID()
+      server.upgrade(req, { data: { id, request: req } })
+      return
+    }
+    return app.fetch(req)
+  },
+  websocket: {
+    open(ws) {
+      const { id, request } = ws.data
+      let onMessage: (msg: string) => void = () => {}
+
+      const dispose = wsServer.opened(
+        {
+          protocol: "graphql-transport-ws",
+          send: (msg) => {
+            ws.send(msg)
+          },
+          close: (code, reason) => ws.close(code, reason),
+          onMessage: (cb) => {
+            onMessage = cb
+          },
+        },
+        { request }
+      ) as DispatchFn
+
+      onMessageHandlers.set(id, (msg) => onMessage(msg))
+      disposeHandlers.set(id, dispose)
+    },
+    message(ws, message) {
+      onMessageHandlers.get(ws.data.id)?.(message.toString())
+    },
+    close(ws, code, reason) {
+      const { id } = ws.data
+      disposeHandlers.get(id)?.(code, reason)
+      onMessageHandlers.delete(id)
+      disposeHandlers.delete(id)
+    },
+  },
 })
 
 console.log(`🚀 API running at http://localhost:${env.PORT}`)

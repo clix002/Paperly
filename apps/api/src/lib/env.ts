@@ -11,6 +11,7 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string(),
   R2_ENDPOINT: z.string().url(),
   R2_BUCKET: z.string(),
+  GROQ_API_KEY: z.string().optional(),
 })
 
 export const env = envSchema.parse(process.env)

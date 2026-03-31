@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { nanoid } from "nanoid"
 import { user } from "./auth"
 import { document } from "./document"
@@ -15,6 +15,7 @@ export const comment = pgTable("comment", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   parentId: text("parent_id"),
+  isAi: boolean("is_ai").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })

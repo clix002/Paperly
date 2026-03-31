@@ -1,4 +1,4 @@
-import { execSync } from "child_process"
+import { execSync } from "node:child_process"
 
 // Correr migraciones antes de iniciar la API
 console.log("⏳ Aplicando migraciones...")
