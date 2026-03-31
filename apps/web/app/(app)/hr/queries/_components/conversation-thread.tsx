@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation, useQuery } from "@apollo/client/react"
+import { useMutation } from "@apollo/client/react"
 import { Send } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -10,11 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import {
-  CreateCommentDocument,
-  GetCommentsByDocumentDocument,
-  UpdateDocumentDocument,
-} from "@/lib/apollo/generated/graphql"
+import { useComments } from "@/hooks/use-comments"
+import { UpdateDocumentDocument } from "@/lib/apollo/generated/graphql"
 import { cn, formatRelativeDate } from "@/lib/utils"
 import { type CommentType, type ConvoDoc, THREAD_ACTIONS } from "../_lib/queries.types"
 import { WorkerAvatar } from "./worker-avatar"
@@ -26,22 +23,8 @@ interface ConversationThreadProps {
 
 export function ConversationThread({ doc, onStatusChange }: ConversationThreadProps) {
   const [message, setMessage] = useState("")
-
-  const {
-    data,
-    loading: messagesLoading,
-    refetch,
-  } = useQuery(GetCommentsByDocumentDocument, {
-    variables: { documentId: doc.id },
-  })
-
-  const [createComment, { loading: sending }] = useMutation(CreateCommentDocument, {
-    onCompleted: () => {
-      setMessage("")
-      refetch()
-    },
-    onError: (err) => toast.error(err.message),
-  })
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { comments, loading: messagesLoading, sending, send } = useComments(doc.id)
 
   const [updateDocument, { loading: updating }] = useMutation(UpdateDocumentDocument, {
     onCompleted: () => {
@@ -51,13 +34,12 @@ export function ConversationThread({ doc, onStatusChange }: ConversationThreadPr
     onError: (err) => toast.error(err.message),
   })
 
-  const comments = (data?.getCommentsByDocument ?? []) as CommentType[]
   const action = THREAD_ACTIONS[doc.status]
 
   const handleSend = () => {
-    const trimmed = message.trim()
-    if (!trimmed) return
-    createComment({ variables: { documentId: doc.id, content: trimmed } })
+    send(message)
+    setMessage("")
+    if (textareaRef.current) textareaRef.current.style.height = "auto"
   }
 
   return (
@@ -103,7 +85,7 @@ export function ConversationThread({ doc, onStatusChange }: ConversationThreadPr
       </div>
 
       {/* Mensajes */}
-      <MessageList comments={comments} loading={messagesLoading} />
+      <MessageList comments={comments as CommentType[]} loading={messagesLoading} />
 
       {/* Input */}
       <div className="px-6 py-4 border-t bg-background shrink-0">
@@ -151,7 +133,7 @@ function MessageList({ comments, loading }: MessageListProps) {
   if (comments.length === 0) return <MessagesEmpty />
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+    <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 [&::-webkit-scrollbar]:hidden">
       {comments.map((c) => (
         <MessageBubble key={c.id} comment={c} />
       ))}

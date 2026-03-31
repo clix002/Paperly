@@ -1,24 +1,20 @@
 "use client"
 
-import { useMutation, useQuery } from "@apollo/client/react"
-import { MessageSquare, Send, X } from "lucide-react"
+import { Bot, MessageSquare, Send, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import {
-  CreateCommentDocument,
-  GetCommentsByDocumentDocument,
-} from "@/lib/apollo/generated/graphql"
+import { useComments } from "@/hooks/use-comments"
 import { cn, formatRelativeDate, getInitials } from "@/lib/utils"
 
 type Comment = {
   id: string
   content: string
+  isAi: boolean
   createdAt: string
   author?: { id: string; name: string; role: string } | null
 }
@@ -49,20 +45,7 @@ interface CommentAvatarProps {
 export function CommentsSidebar({ documentId, onClose }: CommentsSidebarProps) {
   const [message, setMessage] = useState("")
   const bottomRef = useRef<HTMLDivElement>(null)
-
-  const { data, loading, refetch } = useQuery(GetCommentsByDocumentDocument, {
-    variables: { documentId },
-  })
-
-  const [createComment, { loading: sending }] = useMutation(CreateCommentDocument, {
-    onCompleted: () => {
-      setMessage("")
-      refetch()
-    },
-    onError: (err) => toast.error(err.message),
-  })
-
-  const comments = (data?.getCommentsByDocument ?? []) as Comment[]
+  const { comments, loading, sending, send } = useComments(documentId)
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll al llegar nuevos mensajes
   useEffect(() => {
@@ -70,9 +53,8 @@ export function CommentsSidebar({ documentId, onClose }: CommentsSidebarProps) {
   }, [comments.length])
 
   const handleSend = () => {
-    const trimmed = message.trim()
-    if (!trimmed) return
-    createComment({ variables: { documentId, content: trimmed } })
+    send(message)
+    setMessage("")
   }
 
   return (
@@ -96,8 +78,8 @@ export function CommentsSidebar({ documentId, onClose }: CommentsSidebarProps) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        <SidebarMessages comments={comments} loading={loading} />
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 [&::-webkit-scrollbar]:hidden">
+        <SidebarMessages comments={comments as Comment[]} loading={loading} />
         <div ref={bottomRef} />
       </div>
 
@@ -121,7 +103,7 @@ export function CommentsSidebar({ documentId, onClose }: CommentsSidebarProps) {
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-1.5">
-          RR.HH. responderá a tu observación
+          Un asistente IA responderá primero, luego RR.HH. si es necesario
         </p>
       </div>
     </aside>
@@ -163,18 +145,37 @@ function SidebarMessageBubble({ comment }: SidebarMessageBubbleProps) {
 
   return (
     <div className={cn("flex gap-2", isMe && "flex-row-reverse")}>
-      <CommentAvatar name={comment.author?.name} isHR={isHR} />
+      {comment.isAi ? (
+        <div className="size-7 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
+          <Bot className="size-3.5 text-violet-600 dark:text-violet-400" />
+        </div>
+      ) : (
+        <CommentAvatar name={comment.author?.name} isHR={isHR} />
+      )}
       <div className={cn("max-w-[80%] space-y-1", isMe && "items-end flex flex-col")}>
         <div className={cn("flex items-center gap-1.5 text-[10px]", isMe && "flex-row-reverse")}>
-          <span className="font-medium">{comment.author?.name}</span>
-          <Badge variant="secondary" className="text-[9px] px-1 py-0">
-            {isMe ? "Tú" : "RR.HH."}
+          <span className="font-medium">
+            {comment.isAi ? "Asistente IA" : comment.author?.name}
+          </span>
+          <Badge
+            variant="secondary"
+            className={cn(
+              "text-[9px] px-1 py-0",
+              comment.isAi &&
+                "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+            )}
+          >
+            {isMe ? "Tú" : comment.isAi ? "IA" : "RR.HH."}
           </Badge>
         </div>
         <div
           className={cn(
             "rounded-2xl px-3 py-2 text-xs leading-relaxed wrap-break-word",
-            isMe ? "rounded-tr-sm bg-primary text-primary-foreground" : "rounded-tl-sm bg-muted"
+            isMe
+              ? "rounded-tr-sm bg-primary text-primary-foreground"
+              : comment.isAi
+                ? "rounded-tl-sm bg-violet-50 text-violet-900 dark:bg-violet-900/20 dark:text-violet-100"
+                : "rounded-tl-sm bg-muted"
           )}
         >
           {comment.content}

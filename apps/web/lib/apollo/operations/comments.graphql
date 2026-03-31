@@ -4,6 +4,7 @@ query GetCommentsByDocument($documentId: ID!) {
     content
     documentId
     authorId
+    isAi
     createdAt
     author {
       id
@@ -31,17 +32,38 @@ query GetDocumentsWithComments {
   }
 }
 
+subscription OnCommentAdded($documentId: ID!) {
+  commentAdded(documentId: $documentId) {
+    id
+    content
+    documentId
+    authorId
+    isAi
+    createdAt
+    author {
+      id
+      name
+      email
+      role
+      image
+    }
+  }
+}
+
 mutation CreateComment($documentId: ID!, $content: String!) {
   createComment(documentId: $documentId, content: $content) {
     id
     content
     documentId
     authorId
+    isAi
     createdAt
     author {
       id
       name
+      email
       role
+      image
     }
   }
 }

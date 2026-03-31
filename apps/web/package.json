@@ -35,6 +35,7 @@
     "es-toolkit": "^1.45.1",
     "fabric": "^7.2.0",
     "graphql": "^16.11.0",
+    "graphql-ws": "^6.0.8",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.513.0",
     "material-colors": "^1.2.6",

@@ -62,7 +62,7 @@ export default function HRQueriesPage() {
           total={clones.length}
         />
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
           {loading ? (
             <ListSkeleton />
           ) : displayed.length === 0 ? (

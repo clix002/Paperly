@@ -2,6 +2,7 @@
 export { CommentMutations } from "./comment/comment.mutations.resolvers"
 export { CommentQueries } from "./comment/comment.queries.resolvers"
 export { CommentRelations } from "./comment/comment.relations.resolvers"
+export { CommentSubscriptions } from "./comment/comment.subscriptions.resolvers"
 
 // Document resolvers
 export { DocumentMutations } from "./document/document.mutations.resolvers"

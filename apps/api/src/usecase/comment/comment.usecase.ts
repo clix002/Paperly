@@ -2,6 +2,8 @@ import { comment as commentTable, document as documentTable } from "@paperly/db"
 import { and, eq } from "drizzle-orm"
 import { GraphQLError } from "graphql"
 import type { IContext } from "../../graphql/context"
+import { generateAiResponse } from "../../lib/ai"
+import { pubSub } from "../../lib/pubsub"
 import notificationUseCase from "../notification/notification.usecase"
 
 class CommentUseCase {
@@ -22,7 +24,6 @@ class CommentUseCase {
       throw new GraphQLError("No autorizado", { extensions: { code: "UNAUTHORIZED" } })
     }
 
-    // Obtener documentos que tienen al menos un comentario
     const comments = await ctx.db
       .select({ documentId: commentTable.documentId })
       .from(commentTable)
@@ -45,7 +46,6 @@ class CommentUseCase {
       throw new GraphQLError("No autenticado", { extensions: { code: "UNAUTHENTICATED" } })
     }
 
-    // Verificar que el documento existe
     const [doc] = await ctx.db
       .select()
       .from(documentTable)
@@ -56,7 +56,6 @@ class CommentUseCase {
       throw new GraphQLError("Documento no encontrado", { extensions: { code: "NOT_FOUND" } })
     }
 
-    // Crear comentario
     const [created] = await ctx.db
       .insert(commentTable)
       .values({
@@ -66,7 +65,8 @@ class CommentUseCase {
       })
       .returning()
 
-    // Si es worker y el documento no está en in_review, cambiarlo
+    if (created) pubSub.publish(`COMMENT_ADDED:${args.documentId}`, created)
+
     if (ctx.user.role === "worker" && doc.status !== "in_review") {
       await ctx.db
         .update(documentTable)
@@ -74,7 +74,6 @@ class CommentUseCase {
         .where(eq(documentTable.id, args.documentId))
     }
 
-    // Notificar a la otra parte
     const recipientId = ctx.user.role === "worker" ? doc.senderId : doc.receiverId
     if (recipientId) {
       await notificationUseCase.create(
@@ -89,7 +88,47 @@ class CommentUseCase {
       )
     }
 
+    if (ctx.user.role === "worker" && doc.senderId) {
+      this.sendAiResponse({
+        doc: { ...doc, contentJson: doc.contentJson as string | null },
+        observation: args.content,
+        workerName: ctx.user.name ?? "Trabajador",
+        hrUserId: doc.senderId,
+        db: ctx.db,
+      })
+    }
+
     return created
+  }
+
+  private async sendAiResponse(params: {
+    doc: { id: string; title: string; contentJson: string | null }
+    observation: string
+    workerName: string
+    hrUserId: string
+    db: IContext["db"]
+  }) {
+    const aiText = await generateAiResponse({
+      documentTitle: params.doc.title,
+      documentContent: params.doc.contentJson ?? "",
+      workerName: params.workerName,
+      observation: params.observation,
+    })
+
+    console.log("[ai] response:", aiText ? aiText.slice(0, 80) : "null (falló o no hay key)")
+    if (!aiText) return
+
+    const [aiComment] = await params.db
+      .insert(commentTable)
+      .values({
+        content: aiText,
+        documentId: params.doc.id,
+        authorId: params.hrUserId,
+        isAi: true,
+      })
+      .returning()
+
+    if (aiComment) pubSub.publish(`COMMENT_ADDED:${params.doc.id}`, aiComment)
   }
 }
 

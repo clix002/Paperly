@@ -4,6 +4,7 @@ type Comment {
   documentId: ID!
   authorId: ID!
   parentId: ID
+  isAi: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
   author: User
