@@ -1,4 +1,4 @@
 extend type Query {
-  getCommentsByDocument(documentId: ID!): [Comment!]!
+  getCommentsByDocument(documentId: ID!, options: OptionsInput): CommentPagination!
   getDocumentsWithComments: [Document!]!
 }

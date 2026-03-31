@@ -46,6 +46,7 @@ export function CommentsSidebar({ documentId, onClose }: CommentsSidebarProps) {
   const [message, setMessage] = useState("")
   const bottomRef = useRef<HTMLDivElement>(null)
   const { comments, loading, sending, send } = useComments(documentId)
+  // loadMore/hasMore disponibles si se necesita scroll infinito en worker
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll al llegar nuevos mensajes
   useEffect(() => {

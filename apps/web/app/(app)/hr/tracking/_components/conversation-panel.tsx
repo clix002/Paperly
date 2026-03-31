@@ -1,7 +1,7 @@
 "use client"
 
 import { Clock, MessageSquare, Send } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { WorkerAvatar } from "@/app/(app)/hr/queries/_components/worker-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,8 @@ interface ConversationPanelProps {
 
 export function ConversationPanel({ documentId }: ConversationPanelProps) {
   const [message, setMessage] = useState("")
-  const { comments, loading, sending, send } = useComments(documentId)
+  const { comments, loading, sending, send, loadMore, loadingMore, hasMore } =
+    useComments(documentId)
 
   const handleSend = () => {
     send(message)
@@ -35,7 +36,13 @@ export function ConversationPanel({ documentId }: ConversationPanelProps) {
   return (
     <>
       <ConversationHeader count={comments.length} />
-      <ConversationMessages comments={comments as Comment[]} loading={loading} />
+      <ConversationMessages
+        comments={comments as Comment[]}
+        loading={loading}
+        loadMore={loadMore}
+        loadingMore={loadingMore}
+        hasMore={hasMore}
+      />
       <ConversationInput
         message={message}
         onMessageChange={setMessage}
@@ -68,9 +75,37 @@ function ConversationHeader({ count }: ConversationHeaderProps) {
 interface ConversationMessagesProps {
   comments: Comment[]
   loading: boolean
+  loadMore: () => void
+  loadingMore: boolean
+  hasMore: boolean
 }
 
-function ConversationMessages({ comments, loading }: ConversationMessagesProps) {
+function ConversationMessages({
+  comments,
+  loading,
+  loadMore,
+  loadingMore,
+  hasMore,
+}: ConversationMessagesProps) {
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const lastIdRef = useRef<string | null>(null)
+
+  const lastId = comments[comments.length - 1]?.id ?? null
+
+  useEffect(() => {
+    if (lastId && lastId !== lastIdRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+      lastIdRef.current = lastId
+    }
+  }, [lastId])
+
+  const handleScroll = () => {
+    if (containerRef.current && containerRef.current.scrollTop === 0 && hasMore) {
+      loadMore()
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -89,10 +124,20 @@ function ConversationMessages({ comments, loading }: ConversationMessagesProps) 
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-5 space-y-3">
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="flex-1 overflow-y-auto p-5 space-y-3 [&::-webkit-scrollbar]:hidden"
+    >
+      {loadingMore && (
+        <div className="flex justify-center py-2">
+          <Spinner className="size-4" />
+        </div>
+      )}
       {comments.map((comment) => (
         <CommentBubble key={comment.id} comment={comment} />
       ))}
+      <div ref={bottomRef} />
     </div>
   )
 }

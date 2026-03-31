@@ -1,17 +1,27 @@
-query GetCommentsByDocument($documentId: ID!) {
-  getCommentsByDocument(documentId: $documentId) {
-    id
-    content
-    documentId
-    authorId
-    isAi
-    createdAt
-    author {
+query GetCommentsByDocument($documentId: ID!, $options: OptionsInput) {
+  getCommentsByDocument(documentId: $documentId, options: $options) {
+    docs {
       id
-      name
-      email
-      role
-      image
+      content
+      documentId
+      authorId
+      isAi
+      createdAt
+      author {
+        id
+        name
+        email
+        role
+        image
+      }
+    }
+    info {
+      totalDocs
+      totalPages
+      page
+      limit
+      hasNextPage
+      hasPrevPage
     }
   }
 }

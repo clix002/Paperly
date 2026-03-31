@@ -1,5 +1,5 @@
 import { comment as commentTable, document as documentTable } from "@paperly/db"
-import { and, eq } from "drizzle-orm"
+import { and, desc, eq, not, sql } from "drizzle-orm"
 import { GraphQLError } from "graphql"
 import type { IContext } from "../../graphql/context"
 import { generateAiResponse } from "../../lib/ai"
@@ -7,16 +7,46 @@ import { pubSub } from "../../lib/pubsub"
 import notificationUseCase from "../notification/notification.usecase"
 
 class CommentUseCase {
-  async getCommentsByDocument(args: { documentId: string }, ctx: IContext) {
+  async getCommentsByDocument(
+    args: { documentId: string; options?: { limit?: number; page?: number } },
+    ctx: IContext
+  ) {
     if (!ctx.user) {
       throw new GraphQLError("No autenticado", { extensions: { code: "UNAUTHENTICATED" } })
     }
 
-    return ctx.db
-      .select()
-      .from(commentTable)
-      .where(eq(commentTable.documentId, args.documentId))
-      .orderBy(commentTable.createdAt)
+    const limit = args.options?.limit ?? 20
+    const page = args.options?.page ?? 1
+    const offset = (page - 1) * limit
+
+    const [rows, countRows] = await Promise.all([
+      ctx.db
+        .select()
+        .from(commentTable)
+        .where(eq(commentTable.documentId, args.documentId))
+        .orderBy(desc(commentTable.createdAt))
+        .limit(limit)
+        .offset(offset),
+      ctx.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(commentTable)
+        .where(eq(commentTable.documentId, args.documentId)),
+    ])
+
+    const totalDocs = countRows[0]?.count ?? 0
+    const totalPages = Math.ceil(totalDocs / limit)
+
+    return {
+      docs: rows.reverse(),
+      info: {
+        totalDocs,
+        limit,
+        page,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    }
   }
 
   async getDocumentsWithComments(ctx: IContext) {
@@ -89,13 +119,27 @@ class CommentUseCase {
     }
 
     if (ctx.user.role === "worker" && doc.senderId) {
-      this.sendAiResponse({
-        doc: { ...doc, contentJson: doc.contentJson as string | null },
-        observation: args.content,
-        workerName: ctx.user.name ?? "Trabajador",
-        hrUserId: doc.senderId,
-        db: ctx.db,
-      })
+      const hrHasReplied = await ctx.db
+        .select({ id: commentTable.id })
+        .from(commentTable)
+        .where(
+          and(
+            eq(commentTable.documentId, args.documentId),
+            eq(commentTable.authorId, doc.senderId),
+            not(eq(commentTable.isAi, true))
+          )
+        )
+        .limit(1)
+
+      if (hrHasReplied.length === 0) {
+        this.sendAiResponse({
+          doc: { ...doc, contentJson: doc.contentJson as string | null },
+          observation: args.content,
+          workerName: ctx.user.name ?? "Trabajador",
+          hrUserId: doc.senderId,
+          db: ctx.db,
+        })
+      }
     }
 
     return created
