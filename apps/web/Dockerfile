@@ -22,6 +22,8 @@ WORKDIR /app/apps/web
 # NEXT_PUBLIC_* se hornea en build time — debe venir como build arg
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_PUBLIC_WS_URL
+ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
 
 RUN bun --bun next build
 

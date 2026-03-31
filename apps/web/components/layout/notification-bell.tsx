@@ -12,13 +12,19 @@ import {
   MarkNotificationReadDocument,
   NotificationType,
 } from "@/lib/apollo/generated/graphql"
+import { useSession } from "@/lib/auth-client"
 
-const NOTIFICATION_HREF: Partial<Record<NotificationType, (documentId: string) => string>> = {
-  [NotificationType.DocumentSent]: (id) => `/dashboard/documents/${id}`,
+const HR_NOTIFICATION_HREF: Partial<Record<NotificationType, (documentId: string) => string>> = {
   [NotificationType.DocumentSigned]: (id) => `/hr/tracking?doc=${id}`,
   [NotificationType.DocumentInReview]: () => `/hr/queries`,
   [NotificationType.CommentReceived]: () => `/hr/queries`,
 }
+
+const WORKER_NOTIFICATION_HREF: Partial<Record<NotificationType, (documentId: string) => string>> =
+  {
+    [NotificationType.DocumentSent]: (id) => `/dashboard/documents/${id}`,
+    [NotificationType.CommentReceived]: (id) => `/dashboard/documents/${id}`,
+  }
 
 function timeAgo(date: string): string {
   const diff = Date.now() - new Date(date).getTime()
@@ -31,6 +37,10 @@ function timeAgo(date: string): string {
 }
 
 export function NotificationBell() {
+  const { data: session } = useSession()
+  const role = (session?.user as { role?: string } | undefined)?.role
+  const NOTIFICATION_HREF = role === "hr" ? HR_NOTIFICATION_HREF : WORKER_NOTIFICATION_HREF
+
   const { data: countData } = useQuery(GetUnreadCountDocument, {
     pollInterval: 30000,
   })
